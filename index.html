@@ -57,6 +57,8 @@
         let search = document.getElementById('btn-search')
         let modal = document.getElementsByClassName('modal-body')
 
+        const regex = /^[A-Za-z]+([ '-][A-Za-z]+)*$/;
+
         const baseUrl = 'https://api.nationalize.io/?name='
         const countryApi = 'https://restcountries.com/v3.1/alpha/'
         async function guess() {
@@ -67,13 +69,26 @@
             resultContainer.innerHTML = ''; // reset isi
             loader.style.display = 'block'; // tampilkan loading
 
+            if(!regex.test(input.value)){
+                Swal.fire({
+                    icon: "error",
+                    title: "Oops...",
+                    text: "Isi dengan huruf!"
+                }).then((result) => {
+                    /* Read more about isConfirmed, isDenied below */
+                    if (result.isConfirmed) {
+                        const modalEl = document.getElementById('exampleModalCenter');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        modalInstance.hide();
+                    }
+                });
+
+            }
             try {
                 const res = await fetch('data.json');
                 if (res.status !== 200) throw new Error("Tidak bisa mencari nama");
 
                 const data = await res.json();
-
-                // buat array untuk nampung data negara
                 let countryCards = '';
 
                 for (const c of data.country) {
@@ -84,7 +99,7 @@
                     countryCards += `
                     <div class="card">
                         <div class="card-header text-center">${c.country_id} - ${countryName}</div>
-                        <div class="card-body">dengan kecocokan sebesar ${((c.probability) * 100).toFixed(2) }</div>
+                        <div class="card-body">dengan kecocokan: ${((c.probability) * 100).toFixed(2) }%</div>
                     </div>
                     `;
                 }
@@ -119,6 +134,7 @@
 
             } finally {
                 loader.style.display = 'none'; // sembunyikan loader
+                input.value = ''
             }
         }
 
